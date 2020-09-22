@@ -11,6 +11,7 @@
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/error.h"
+#include "esp_crt_bundle.h"
 
 typedef struct sslclient_context {
     int socket;
