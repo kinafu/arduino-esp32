@@ -103,7 +103,12 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
     }
 
     log_v("Setting up the SSL/TLS structure...");
-
+    ret = esp_crt_bundle_attach(&ssl_client->ssl_conf);
+    
+    if (ret < 0) {
+        return handle_error(ret);
+    }
+    
     if ((ret = mbedtls_ssl_config_defaults(&ssl_client->ssl_conf,
                                            MBEDTLS_SSL_IS_CLIENT,
                                            MBEDTLS_SSL_TRANSPORT_STREAM,
@@ -155,8 +160,10 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
             return handle_error(ret);
         }
     } else {
-        mbedtls_ssl_conf_authmode(&ssl_client->ssl_conf, MBEDTLS_SSL_VERIFY_NONE);
-        log_i("WARNING: Use certificates for a more secure communication!");
+        log_d("Loading trusted CA certs");
+        mbedtls_x509_crt_init(&ssl_client->ca_cert);
+        mbedtls_ssl_conf_authmode(&ssl_client->ssl_conf, MBEDTLS_SSL_VERIFY_REQUIRED);
+        mbedtls_ssl_conf_ca_chain(&ssl_client->ssl_conf, &ssl_client->ca_cert, NULL);
     }
 
     if (cli_cert != NULL && cli_key != NULL) {
