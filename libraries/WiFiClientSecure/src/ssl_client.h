@@ -11,7 +11,9 @@
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/error.h"
-
+#ifdef CONFIG_MBEDTLS_CUSTOM_CERTIFICATE_BUNDLE
+    #include "esp_crt_bundle.h"
+#endif
 typedef struct sslclient_context {
     int socket;
     mbedtls_ssl_context ssl_ctx;

@@ -102,6 +102,15 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
         return handle_error(ret);
     }
 
+    #ifdef CONFIG_MBEDTLS_CUSTOM_CERTIFICATE_BUNDLE
+
+    ret = esp_crt_bundle_attach(&ssl_client->ssl_conf);
+    
+    if (ret < 0) {
+        return handle_error(ret);
+    }
+
+    #endif
     log_v("Setting up the SSL/TLS structure...");
 
     if ((ret = mbedtls_ssl_config_defaults(&ssl_client->ssl_conf,
@@ -155,8 +164,13 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
             return handle_error(ret);
         }
     } else {
-        mbedtls_ssl_conf_authmode(&ssl_client->ssl_conf, MBEDTLS_SSL_VERIFY_NONE);
-        log_i("WARNING: Use certificates for a more secure communication!");
+        #ifdef CONFIG_MBEDTLS_CUSTOM_CERTIFICATE_BUNDLE
+            mbedtls_ssl_conf_authmode(&ssl_client->ssl_conf, MBEDTLS_SSL_VERIFY_REQUIRED);
+            log_d("Verifying server certificate using embedded x509 bundle");
+        #else
+            mbedtls_ssl_conf_authmode(&ssl_client->ssl_conf, MBEDTLS_SSL_VERIFY_NONE);
+            log_i("WARNING: Use certificates for a more secure communication!");
+        #endif
     }
 
     if (cli_cert != NULL && cli_key != NULL) {
